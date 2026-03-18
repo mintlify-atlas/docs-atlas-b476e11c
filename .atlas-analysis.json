@@ -1,0 +1,104 @@
+{
+  "projectType": "saas",
+  "projectName": "POS Ventas",
+  "projectDescription": "A lightweight, browser-based point-of-sale system for small shops that supports product inventory management, cash and credit sales, client debt tracking, barcode scanning, and sales statistics.",
+  "theme": "almond",
+  "primaryColor": "#2563EB",
+  "lightColor": "#EFF6FF",
+  "darkColor": "#1E3A8A",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/sales",
+              "features/inventory",
+              "features/clients",
+              "features/scanner",
+              "features/statistics"
+            ]
+          },
+          {
+            "group": "Data & Storage",
+            "pages": [
+              "data/storage",
+              "data/backup-restore"
+            ]
+          },
+          {
+            "group": "Customization",
+            "pages": [
+              "customization/theme",
+              "customization/currency"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Modules",
+            "pages": [
+              "reference/app",
+              "reference/storage",
+              "reference/products",
+              "reference/sales",
+              "reference/clients",
+              "reference/scanner",
+              "reference/stats"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Point-of-sale sales interface with product grid and shopping cart",
+    "Cash and credit (fiado) payment modes",
+    "Client management with debt tracking and payment history",
+    "Barcode/QR code scanning via device camera using Html5-QRCode",
+    "Product inventory management with CRUD operations",
+    "Sales statistics with weekly, monthly, and all-time filters",
+    "Top-selling products report",
+    "LocalStorage-based data persistence with export/import backup",
+    "Light/dark theme toggle",
+    "Fully offline, no backend required — runs in the browser"
+  ],
+  "publicApiSurface": [
+    "App.init()",
+    "App.switchView(viewName)",
+    "App.showModal(name)",
+    "App.hideModal(name)",
+    "App.showToast(message, type)",
+    "App.setTheme(theme)",
+    "Storage.getProducts()",
+    "Storage.addProduct(product)",
+    "Storage.updateProduct(id, updates)",
+    "Storage.deleteProduct(id)",
+    "Storage.findProductByCode(code)",
+    "Storage.getClients()",
+    "Storage.addClient(client)",
+    "Storage.updateClient(id, updates)",
+    "Storage.deleteClient(id)",
+    "Storage.addDebtNote(clientId, note)",
+    "Storage.recordPayment(clientId, noteId, amount)",
+    "Storage.getSales()",
+    "Storage.addSale(sale)",
+    "Storage.exportData()",
+    "Storage.importData(data)",
+    "Storage.clearAll()",
+    "Sales.addToCart(product)",
+    "Sales.completeSale(tipo, clientId)",
+    "Products.search(term)",
+    "Scanner.startScanning()",
+    "Stats.setPeriod(period)"
+  ]
+}
