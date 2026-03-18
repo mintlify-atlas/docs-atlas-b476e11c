@@ -1,0 +1,435 @@
+---
+title: 'Storage'
+description: 'The data persistence layer. Wraps localStorage with typed helpers for products, clients, and sales.'
+---
+
+The `Storage` object is the single source of truth for all application data. It reads and writes to the browser's `localStorage` using JSON serialization, and provides domain-specific methods for products, clients, and sales. All other modules go through `Storage` — nothing reads `localStorage` directly.
+
+## Constants
+
+| Constant | Value | Description |
+|---|---|---|
+| `Storage.KEYS.PRODUCTS` | `'pos_inventario'` | localStorage key for the products array. |
+| `Storage.KEYS.CLIENTS` | `'pos_clientes'` | localStorage key for the clients array. |
+| `Storage.KEYS.SALES` | `'pos_ventas'` | localStorage key for the sales array. |
+| `Storage.KEYS.VERSION` | `'pos_version'` | localStorage key for the data version string. |
+| `Storage.VERSION` | `'1.0.0'` | Current data schema version. |
+| `Storage.CURRENCY` | `'S/.'` | Currency symbol used when rendering prices. |
+
+## Methods
+
+### `Storage.init()`
+
+Checks whether a version key exists in `localStorage` and writes it if not. Then calls `getProducts()` and, if the array is empty, seeds the store with sample product data via an internal `initSampleProducts()` call.
+
+Called once by `App.init()` before any other module is initialized.
+
+```javascript
+Storage.init();
+```
+
+---
+
+### `Storage.get(key)`
+
+Low-level helper. Reads a raw value from `localStorage` and parses it as JSON. Returns `null` if the key does not exist or if parsing fails.
+
+<ParamField path="key" type="string" required>
+  The raw localStorage key to read.
+</ParamField>
+
+<ResponseField name="return" type="any | null">
+  The parsed value, or `null` on error or missing key.
+</ResponseField>
+
+```javascript
+const products = Storage.get('pos_inventario');
+```
+
+---
+
+### `Storage.set(key, value)`
+
+Low-level helper. Serializes `value` as JSON and writes it to `localStorage`. Returns `false` if serialization or writing fails (e.g., storage quota exceeded).
+
+<ParamField path="key" type="string" required>
+  The raw localStorage key to write.
+</ParamField>
+
+<ParamField path="value" type="any" required>
+  The value to serialize and store.
+</ParamField>
+
+<ResponseField name="return" type="boolean">
+  `true` on success, `false` on error.
+</ResponseField>
+
+```javascript
+Storage.set('pos_inventario', []);
+```
+
+---
+
+## Product methods
+
+### `Storage.getProducts()`
+
+Returns the full products array from `localStorage`. Returns an empty array if none are stored.
+
+<ResponseField name="return" type="object[]">
+  Array of product objects. Each product has `id`, `codigo`, `nombre`, and `precio`.
+</ResponseField>
+
+```javascript
+const products = Storage.getProducts();
+console.log(products[0].nombre); // 'Coca Cola 1L'
+```
+
+---
+
+### `Storage.saveProducts(products)`
+
+Overwrites the entire products array in `localStorage`.
+
+<ParamField path="products" type="object[]" required>
+  The full array of product objects to persist.
+</ParamField>
+
+<ResponseField name="return" type="boolean">
+  `true` on success, `false` on write error.
+</ResponseField>
+
+---
+
+### `Storage.addProduct(product)`
+
+Generates a unique `id` for the product (if one is not already set), appends it to the products array, and saves.
+
+<ParamField path="product" type="object" required>
+  Product object with at minimum `codigo`, `nombre`, and `precio`.
+</ParamField>
+
+<ResponseField name="return" type="object">
+  The product object with its generated `id`.
+</ResponseField>
+
+```javascript
+const newProduct = Storage.addProduct({
+  codigo: '1234567890',
+  nombre: 'Agua Mineral 500ml',
+  precio: 2.00
+});
+console.log(newProduct.id); // e.g. 'lrx2k9abc'
+```
+
+---
+
+### `Storage.updateProduct(id, updates)`
+
+Finds the product with the given `id` and merges `updates` into it using spread (`{ ...product, ...updates }`). Saves the updated array.
+
+<ParamField path="id" type="string" required>
+  The id of the product to update.
+</ParamField>
+
+<ParamField path="updates" type="object" required>
+  Partial product object with the fields to update.
+</ParamField>
+
+<ResponseField name="return" type="object | null">
+  The updated product object, or `null` if no product with that id was found.
+</ResponseField>
+
+```javascript
+Storage.updateProduct('lrx2k9abc', { precio: 2.50 });
+```
+
+---
+
+### `Storage.deleteProduct(id)`
+
+Removes the product with the given `id` from the array and saves.
+
+<ParamField path="id" type="string" required>
+  The id of the product to remove.
+</ParamField>
+
+<ResponseField name="return" type="boolean">
+  `true` if a product was removed, `false` if no match was found.
+</ResponseField>
+
+```javascript
+const deleted = Storage.deleteProduct('lrx2k9abc');
+```
+
+---
+
+### `Storage.findProductByCode(code)`
+
+Searches the products array for an exact match on the `codigo` field.
+
+<ParamField path="code" type="string" required>
+  The barcode string to look up.
+</ParamField>
+
+<ResponseField name="return" type="object | undefined">
+  The matching product object, or `undefined` if not found.
+</ResponseField>
+
+```javascript
+const product = Storage.findProductByCode('7501234567890');
+if (product) {
+  Sales.addToCart(product);
+}
+```
+
+---
+
+## Client methods
+
+### `Storage.getClients()`
+
+Returns the full clients array from `localStorage`. Returns an empty array if none are stored.
+
+<ResponseField name="return" type="object[]">
+  Array of client objects. Each client has `id`, `nombre`, `telefono`, `saldoDeuda`, and `notas`.
+</ResponseField>
+
+---
+
+### `Storage.saveClients(clients)`
+
+Overwrites the entire clients array in `localStorage`.
+
+<ParamField path="clients" type="object[]" required>
+  The full array of client objects to persist.
+</ParamField>
+
+<ResponseField name="return" type="boolean">
+  `true` on success, `false` on write error.
+</ResponseField>
+
+---
+
+### `Storage.addClient(client)`
+
+Generates a unique `id` for the client, initializes `saldoDeuda` to `0` and `notas` to `[]` if not already set, appends to the clients array, and saves.
+
+<ParamField path="client" type="object" required>
+  Client object with at minimum `nombre`. `telefono` is optional.
+</ParamField>
+
+<ResponseField name="return" type="object">
+  The client object with its generated `id`, `saldoDeuda`, and `notas`.
+</ResponseField>
+
+```javascript
+const client = Storage.addClient({ nombre: 'Ana García', telefono: '987654321' });
+```
+
+---
+
+### `Storage.updateClient(id, updates)`
+
+Finds the client with the given `id` and merges `updates` into it. Saves the updated array.
+
+<ParamField path="id" type="string" required>
+  The id of the client to update.
+</ParamField>
+
+<ParamField path="updates" type="object" required>
+  Partial client object with the fields to update.
+</ParamField>
+
+<ResponseField name="return" type="object | null">
+  The updated client object, or `null` if no client with that id was found.
+</ResponseField>
+
+---
+
+### `Storage.deleteClient(id)`
+
+Removes the client with the given `id` from the array and saves.
+
+<ParamField path="id" type="string" required>
+  The id of the client to remove.
+</ParamField>
+
+<ResponseField name="return" type="boolean">
+  `true` if a client was removed, `false` if no match was found.
+</ResponseField>
+
+---
+
+### `Storage.addDebtNote(clientId, note)`
+
+Adds a debt note to a client's `notas` array. Generates an `id` for the note, sets `fecha` to the current ISO timestamp if not already provided, and initializes `pendiente` to `note.total`. Recalculates `client.saldoDeuda` using `calculateClientDebt()`.
+
+<ParamField path="clientId" type="string" required>
+  The id of the client to add the note to.
+</ParamField>
+
+<ParamField path="note" type="object" required>
+  Debt note object. Must include `total` (number), `productos` (array), and optionally `pagado`.
+</ParamField>
+
+<ResponseField name="return" type="object | null">
+  The note object with generated `id`, `fecha`, and `pendiente`. Returns `null` if the client was not found.
+</ResponseField>
+
+```javascript
+Storage.addDebtNote(client.id, {
+  productos: cart,
+  total: 15.50,
+  pagado: 0
+});
+```
+
+---
+
+### `Storage.recordPayment(clientId, noteId, amount)`
+
+Adds `amount` to `note.pagado`, recalculates `note.pendiente` as `note.total - note.pagado`, and recalculates `client.saldoDeuda`.
+
+<ParamField path="clientId" type="string" required>
+  The id of the client.
+</ParamField>
+
+<ParamField path="noteId" type="string" required>
+  The id of the debt note to apply the payment to.
+</ParamField>
+
+<ParamField path="amount" type="number" required>
+  The payment amount in the store currency.
+</ParamField>
+
+<ResponseField name="return" type="boolean">
+  `true` on success, `false` if the client or note was not found.
+</ResponseField>
+
+```javascript
+Storage.recordPayment(client.id, note.id, 10.00);
+```
+
+---
+
+### `Storage.calculateClientDebt(client)`
+
+Sums the `pendiente` field across all of a client's debt notes.
+
+<ParamField path="client" type="object" required>
+  A client object with a `notas` array.
+</ParamField>
+
+<ResponseField name="return" type="number">
+  Total outstanding debt across all notes.
+</ResponseField>
+
+```javascript
+const total = Storage.calculateClientDebt(client);
+console.log(total); // e.g. 45.50
+```
+
+---
+
+## Sales methods
+
+### `Storage.getSales()`
+
+Returns the full sales array from `localStorage`. Returns an empty array if none are stored.
+
+<ResponseField name="return" type="object[]">
+  Array of sale objects. Each sale has `id`, `fecha`, `productos`, `total`, `tipo`, and `clienteId`.
+</ResponseField>
+
+---
+
+### `Storage.saveSales(sales)`
+
+Overwrites the entire sales array in `localStorage`.
+
+<ParamField path="sales" type="object[]" required>
+  The full array of sale objects to persist.
+</ParamField>
+
+<ResponseField name="return" type="boolean">
+  `true` on success, `false` on write error.
+</ResponseField>
+
+---
+
+### `Storage.addSale(sale)`
+
+Generates a unique `id` for the sale and sets `fecha` to the current ISO timestamp if not already provided. Appends to the sales array and saves.
+
+<ParamField path="sale" type="object" required>
+  Sale object with `productos`, `total`, `tipo`, and optionally `clienteId`.
+</ParamField>
+
+<ResponseField name="return" type="object">
+  The sale object with its generated `id` and `fecha`.
+</ResponseField>
+
+---
+
+## Utility methods
+
+### `Storage.generateId()`
+
+Generates a short, unique string id using `Date.now()` and `Math.random()`, both converted to base-36.
+
+<ResponseField name="return" type="string">
+  A unique id string, e.g. `'lrx2k9abc3f'`.
+</ResponseField>
+
+```javascript
+const id = Storage.generateId();
+```
+
+---
+
+### `Storage.exportData()`
+
+Builds and returns a full data snapshot suitable for backup.
+
+<ResponseField name="return" type="object">
+  An object with `version` (string), `timestamp` (ISO string), `products` (array), `clients` (array), and `sales` (array).
+</ResponseField>
+
+```javascript
+const backup = Storage.exportData();
+console.log(backup.version);   // '1.0.0'
+console.log(backup.timestamp); // '2026-03-18T12:00:00.000Z'
+```
+
+---
+
+### `Storage.importData(data)`
+
+Restores products, clients, and sales from a backup object produced by `exportData()`. Only writes the keys present in `data`.
+
+<ParamField path="data" type="object" required>
+  Backup object. May contain `products`, `clients`, and/or `sales` arrays.
+</ParamField>
+
+<ResponseField name="return" type="boolean">
+  `true` on success, `false` if an error occurs during import.
+</ResponseField>
+
+```javascript
+const ok = Storage.importData(backup);
+```
+
+---
+
+### `Storage.clearAll()`
+
+Removes all three data keys (`pos_inventario`, `pos_clientes`, `pos_ventas`) from `localStorage`, then calls `Storage.init()` to re-seed the store with sample products.
+
+```javascript
+Storage.clearAll();
+```
+
+<Warning>
+  `clearAll()` permanently deletes all products, clients, and sales data. This action cannot be undone.
+</Warning>

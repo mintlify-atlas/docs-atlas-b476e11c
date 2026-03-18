@@ -1,0 +1,45 @@
+---
+title: "Currency"
+description: "Change the currency symbol displayed throughout POS Ventas to match your local currency."
+---
+
+POS Ventas uses a single currency symbol that appears everywhere prices are shown: product cards, the cart total, client debt amounts, and the stats view. The symbol is defined in one place, so you only need to change it once.
+
+## Default currency
+
+The default symbol is `S/.` (Peruvian Sol), set in `js/storage.js`:
+
+```javascript
+CURRENCY: 'S/.',
+```
+
+## Changing the symbol
+
+Open `js/storage.js` and edit the `CURRENCY` property in the `Storage` object:
+
+```javascript
+CURRENCY: 'S/.', // change this line
+```
+
+Replace `'S/.'` with your local currency symbol. Common examples:
+
+```javascript
+CURRENCY: '$',    // US Dollar
+CURRENCY: '€',    // Euro
+CURRENCY: 'MX$',  // Mexican Peso
+CURRENCY: 'COP$', // Colombian Peso
+```
+
+Save the file and reload the app. The new symbol will appear throughout the interface immediately.
+
+<Tip>
+Change the currency symbol before you add your real products. That way, all prices are displayed correctly from the start and you avoid any confusion from the symbol changing mid-use.
+</Tip>
+
+## What changes — and what does not
+
+Changing `Storage.CURRENCY` only updates the **display symbol**. It does not convert any stored price values. If you are switching from one currency to another with different amounts (for example, from Soles to Dollars), you will need to manually update the price of each product in the **Products** view after changing the symbol.
+
+<Note>
+The currency symbol is read directly from `Storage.CURRENCY` at render time, so there is no need to clear or re-import your data after changing it.
+</Note>

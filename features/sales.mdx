@@ -1,0 +1,70 @@
+---
+title: "Sales"
+description: "Process cash and credit sales using the product grid and shopping cart."
+keywords: ["sales", "cart", "cobrar", "fiar", "fiado", "payment", "checkout"]
+---
+
+The Sales view is the main screen you use during day-to-day operation. Products are displayed as a grid on the left; the shopping cart sits on the right. Tap a product to add it, then collect payment when the customer is ready.
+
+## Finding products
+
+Type in the search bar at the top of the Sales view to filter the product grid in real time. The search is debounced by 300 ms, so the grid updates shortly after you stop typing.
+
+You can search by:
+- **Product name** — partial matches work
+- **Barcode code** — enter the full or partial code
+
+To scan a barcode with the camera instead of typing, tap the **Escanear** (📷) button. See [Barcode scanner](/features/scanner) for details.
+
+## Building the cart
+
+Tap any product card to add it to the cart. If the product is already in the cart, the quantity increases by one automatically.
+
+Once items are in the cart, adjust quantities with the **+** and **−** buttons on each line:
+
+- **+** increases the quantity by one
+- **−** decreases the quantity by one; when the quantity reaches zero the item is removed from the cart
+
+<Tip>
+  Tap **Limpiar** in the cart header to remove all items at once. You'll be asked to confirm before the cart is cleared.
+</Tip>
+
+## Collecting payment
+
+### Cash payment
+
+Tap **COBRAR** to complete the sale as a cash transaction. The sale is recorded to local storage and the cart is cleared. A confirmation toast shows the total collected.
+
+### Credit (fiado) payment
+
+Tap **FIAR** to record the sale as credit. A client selection modal opens — search for and tap the client you want to assign the debt to. The sale is saved and a debt note is created on that client's account.
+
+<Note>
+  If no clients exist yet, the selector lets you add a new client on the spot.
+</Note>
+
+## Sale data structure
+
+Each completed sale is stored in localStorage with the following shape:
+
+```json
+{
+  "id": "auto-generated",
+  "fecha": "2024-01-15T10:30:00.000Z",
+  "productos": [
+    { "id": "p1", "nombre": "Coca Cola 1L", "precio": 5.50, "cantidad": 2 }
+  ],
+  "total": 11.00,
+  "tipo": "efectivo",
+  "clienteId": null
+}
+```
+
+| Field | Description |
+|---|---|
+| `id` | Auto-generated unique identifier |
+| `fecha` | ISO 8601 timestamp of the sale |
+| `productos` | Snapshot of cart items at time of sale |
+| `total` | Sum of all line totals |
+| `tipo` | `"efectivo"` for cash, `"fiado"` for credit |
+| `clienteId` | Client ID for credit sales; `null` for cash |

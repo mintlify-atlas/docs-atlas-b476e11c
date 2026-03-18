@@ -1,0 +1,95 @@
+---
+title: "Clients and debt tracking"
+description: "Manage clients and track outstanding credit balances."
+keywords: ["clients", "debt", "fiado", "abonar", "payment", "notas", "balance"]
+---
+
+The Clients view (tap **Clientes** in the bottom navigation) shows every client you have registered, along with their name, phone number, and total outstanding debt. You use this view to add clients, review their debt history, and record payments against individual debt notes.
+
+## Adding a client
+
+<Steps>
+  <Step title="Open the client form">
+    Tap **Nuevo Cliente** in the top-right corner of the Clients view.
+  </Step>
+  <Step title="Enter client details">
+    Fill in the **Nombre** (required). **Teléfono** is optional but useful for follow-ups.
+  </Step>
+  <Step title="Save">
+    Tap **Guardar**. The client appears in the list immediately.
+  </Step>
+</Steps>
+
+<Tip>
+  Clients with an outstanding balance are visually highlighted in the list so you can spot them at a glance.
+</Tip>
+
+## Viewing client debt history
+
+Tap any client card to open the detail panel. You'll see:
+
+- **Deuda Total** — the total amount currently outstanding across all unpaid notes
+- **Historial de Deudas** — a full list of debt notes, sorted newest first
+
+Each debt note shows the date, the products included, the original total, and the current pending amount. Notes that have been fully paid display a **✓ Pagado** status.
+
+## How credit sales create debt notes
+
+Every time you complete a sale using **FIAR** and assign it to a client, a debt note is automatically created on that client's account. The note captures a snapshot of the sale — the product list, the total, and the full amount as pending.
+
+See [Sales](/features/sales) for how to initiate a credit sale.
+
+## Recording a payment
+
+<Steps>
+  <Step title="Open the client detail">
+    Tap the client card in the Clients view.
+  </Step>
+  <Step title="Find the debt note">
+    Locate the unpaid note in the debt history.
+  </Step>
+  <Step title="Tap Abonar">
+    Tap the **Abonar** button on the note. A payment form opens showing the current pending balance.
+  </Step>
+  <Step title="Enter the amount">
+    Type the amount being paid. You can enter any amount up to the full pending balance — partial payments are supported.
+  </Step>
+  <Step title="Confirm">
+    Tap **Registrar Pago**. The pending balance on the note updates immediately, and the client's total debt decreases by the same amount.
+  </Step>
+</Steps>
+
+## Client data structure
+
+Each client is stored in localStorage with the following shape:
+
+```json
+{
+  "id": "auto",
+  "nombre": "Juan García",
+  "telefono": "555-1234",
+  "saldoDeuda": 22.00,
+  "notas": [
+    {
+      "id": "auto",
+      "fecha": "2024-01-15T10:30:00.000Z",
+      "productos": [
+        { "id": "p1", "nombre": "Coca Cola 1L", "precio": 5.50, "cantidad": 2 }
+      ],
+      "total": 22.00,
+      "pagado": 0,
+      "pendiente": 22.00
+    }
+  ]
+}
+```
+
+| Field | Description |
+|---|---|
+| `id` | Auto-generated unique identifier |
+| `nombre` | Client's name |
+| `telefono` | Phone number (empty string if not provided) |
+| `saldoDeuda` | Running total of all pending balances |
+| `notas` | Array of debt notes — one per credit sale |
+| `notas[].pagado` | Amount paid so far on this note |
+| `notas[].pendiente` | Remaining unpaid balance on this note |

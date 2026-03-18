@@ -1,0 +1,131 @@
+---
+title: 'Stats'
+description: 'Loads and displays sales statistics filtered by time period, including revenue totals and top-selling products.'
+---
+
+The `Stats` module reads the full sales history from `Storage` and renders summary cards and a top-products table on the statistics view. You can filter the data by the current week, the current month, or all time using the period filter buttons.
+
+## Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `currentPeriod` | `string` | The active time filter. One of `'week'`, `'month'`, or `'all'`. Defaults to `'week'`. |
+| `salesData` | `array` | The full unfiltered sales array loaded from `Storage` during the last `render()` call. |
+
+## Methods
+
+### `Stats.init()`
+
+Binds the period filter buttons. Called once by `App.init()`. Note: `render()` is **not** called here — it is triggered when the stats view is first activated via `App.refreshView('stats')`.
+
+```javascript
+Stats.init();
+```
+
+---
+
+### `Stats.bindEvents()`
+
+Attaches `click` listeners to all `.filter-btn` elements. Each listener reads `element.dataset.period` and calls `setPeriod(period)`.
+
+```javascript
+Stats.bindEvents();
+```
+
+---
+
+### `Stats.setPeriod(period)`
+
+Updates `currentPeriod`, toggles the `active` class on the corresponding `.filter-btn`, and calls `render()`.
+
+<ParamField path="period" type="string" required>
+  The time period to filter by. One of `'week'`, `'month'`, or `'all'`.
+</ParamField>
+
+```javascript
+Stats.setPeriod('month');
+Stats.setPeriod('all');
+```
+
+---
+
+### `Stats.render()`
+
+Loads all sales from `Storage.getSales()`, stores them in `salesData`, and filters them with `filterByPeriod()`. If the filtered set is empty, renders an empty state message. Otherwise calculates and renders:
+
+- **Total ventas** — count of sales in the period.
+- **Ingresos** — total revenue.
+- **Efectivo** — revenue from cash sales (`tipo === 'efectivo'`).
+- **Fiado** — revenue from credit sales (`tipo === 'fiado'`).
+- **Productos más vendidos** — a table of the top 10 products by unit quantity, via `getTopProducts()`.
+
+```javascript
+Stats.render();
+```
+
+---
+
+### `Stats.filterByPeriod(sales)`
+
+Filters a sales array based on `currentPeriod`.
+
+| Period | Filter rule |
+|---|---|
+| `'week'` | Sales with `fecha >= start of the current week` (Sunday at midnight). |
+| `'month'` | Sales with `fecha >= first day of the current month` at midnight. |
+| `'all'` | No filter applied — returns the full array. |
+
+<ParamField path="sales" type="object[]" required>
+  The full array of sale objects to filter.
+</ParamField>
+
+<ResponseField name="return" type="object[]">
+  A new array containing only the sales that fall within the current period.
+</ResponseField>
+
+```javascript
+const allSales = Storage.getSales();
+const thisPeriod = Stats.filterByPeriod(allSales);
+```
+
+---
+
+### `Stats.getTopProducts(sales)`
+
+Aggregates product data across all provided sales. Groups by product name (`nombre`), summing `cantidad` (units sold) and `ingresos` (revenue = `precio × cantidad`) for each product. Returns the top 10 products sorted by `cantidad` descending.
+
+<ParamField path="sales" type="object[]" required>
+  The filtered sales array to aggregate.
+</ParamField>
+
+<ResponseField name="return" type="object[]">
+  Array of up to 10 objects, each with:
+  - `nombre` (`string`) — product name.
+  - `cantidad` (`number`) — total units sold.
+  - `ingresos` (`number`) — total revenue for that product.
+</ResponseField>
+
+```javascript
+const top = Stats.getTopProducts(Stats.salesData);
+top.forEach((p, i) => {
+  console.log(`${i + 1}. ${p.nombre}: ${p.cantidad} units, S/.${p.ingresos.toFixed(2)}`);
+});
+```
+
+---
+
+### `Stats.escapeHtml(text)`
+
+Sanitizes a string to prevent XSS when injecting user-provided content into HTML. Creates a temporary `<div>` element, assigns the text as `textContent`, and returns `innerHTML`.
+
+<ParamField path="text" type="string" required>
+  The raw string to sanitize.
+</ParamField>
+
+<ResponseField name="return" type="string">
+  The HTML-escaped string safe for insertion into the DOM.
+</ResponseField>
+
+```javascript
+Stats.escapeHtml('<b>test</b>'); // '&lt;b&gt;test&lt;/b&gt;'
+```

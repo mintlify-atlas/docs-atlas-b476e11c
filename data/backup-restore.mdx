@@ -1,0 +1,89 @@
+---
+title: "Backup and restore"
+description: "Export your POS data as JSON and restore it after a browser reset or device change."
+---
+
+Because POS Ventas stores everything in `localStorage`, your data lives only in one browser on one device. If you clear your browser data, reinstall the browser, or switch devices, you will lose your records unless you have a backup. Exporting regularly is the simplest way to protect your business data.
+
+<Tip>
+Export a backup at least once a month, and always before clearing your browser history or storage.
+</Tip>
+
+## Export format
+
+The exported backup is a JSON object with the following structure:
+
+```json
+{
+  "version": "1.0.0",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "products": [...],
+  "clients": [...],
+  "sales": [...]
+}
+```
+
+The `version` field is included so future versions of the app can migrate older backup formats automatically.
+
+## Export your data
+
+<Steps>
+  <Step title="Open the browser console">
+    In Chrome or Edge, press `F12` (or `Cmd+Option+J` on Mac) to open DevTools, then click the **Console** tab.
+  </Step>
+  <Step title="Run the export script">
+    Paste the following code into the console and press **Enter**:
+
+    ```javascript
+    const backup = Storage.exportData();
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pos-backup.json';
+    a.click();
+    ```
+
+    Your browser will download a file named `pos-backup.json`.
+  </Step>
+  <Step title="Save the file somewhere safe">
+    Move the downloaded file to a cloud storage folder (Google Drive, Dropbox, etc.) or an external drive so it is not lost if your device fails.
+  </Step>
+</Steps>
+
+## Restore from a backup
+
+<Warning>
+Restoring data **replaces** whatever is currently in the app for each data type included in the backup. If you only want to recover specific records, edit the JSON file before importing to remove the sections you do not want to overwrite.
+</Warning>
+
+<Steps>
+  <Step title="Open the browser console">
+    Press `F12` (or `Cmd+Option+J` on Mac) and go to the **Console** tab.
+  </Step>
+  <Step title="Paste your backup and run the import">
+    Copy your backup JSON, then run the following in the console, replacing the placeholder with your actual backup content:
+
+    ```javascript
+    // Paste your backup JSON object into the variable below
+    const data = { /* your backup JSON */ };
+    Storage.importData(data);
+    location.reload();
+    ```
+
+    The page will reload and your restored data will appear.
+  </Step>
+</Steps>
+
+## Reset to factory defaults
+
+To wipe all data and start fresh with the sample products, call `Storage.clearAll()` in the browser console:
+
+```javascript
+Storage.clearAll();
+location.reload();
+```
+
+<Warning>
+`Storage.clearAll()` permanently deletes all products, clients, and sales. This action cannot be undone. Always export a backup before running it.
+</Warning>

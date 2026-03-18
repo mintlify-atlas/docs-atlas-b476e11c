@@ -1,0 +1,51 @@
+---
+title: "Introduction"
+description: "POS Ventas is a zero-install, offline-first, browser-based point-of-sale system built for small shops."
+---
+
+POS Ventas is a point-of-sale system that runs entirely in the browser. There is nothing to install, no account to create, and no backend server required. Open the app, and you're ready to sell.
+
+All data — products, clients, sales history, and debt records — is stored in your browser's localStorage. The app works fully offline once loaded, making it reliable even without an internet connection.
+
+## Views
+
+The app is organized into four views, accessible from the bottom navigation bar:
+
+**Sales (Ventas)** — The main point-of-sale screen. Browse or search your product catalog, tap a product card to add it to the cart, and process payments as cash (**COBRAR**) or credit (**FIAR**). The built-in barcode scanner lets you add products by scanning their codes with your device camera.
+
+**Clients (Clientes)** — Manage your customer list. Each client has a running debt balance that accumulates from credit sales. You can view the full debt history for any client and record partial or full payments against individual transactions.
+
+**Products / Inventory (Inventario)** — Add, edit, and delete products in your catalog. Each product has a barcode code, name, and price. The same search that powers the Sales view searches both name and barcode.
+
+**Stats / Reports (Reportes)** — View sales summaries filtered by this week, this month, or all time. Use this view to understand revenue trends and top-selling products.
+
+## Offline and localStorage model
+
+POS Ventas has no backend. Every read and write goes directly to your browser's localStorage under the keys `pos_inventario`, `pos_clientes`, and `pos_ventas`. The app loads instantly from a static file — either opened directly as `index.html` or served from any static host.
+
+Because there is no sync, your data lives only in the browser where you run the app. The export and import features in the app let you back up your data as a JSON file and restore it later.
+
+<Note>
+  All data is stored in your browser's localStorage. If you clear your browser data or use a different browser profile, your store data will be lost. Use the backup (export) and restore (import) features regularly to protect your data.
+</Note>
+
+## Barcode scanning
+
+POS Ventas uses [Html5-QRCode](https://github.com/mebjas/html5-qrcode) for barcode scanning. Tap the camera button (**Escanear**) in the Sales view to open the scanner. When a barcode is recognized, the app looks up the matching product and adds it to the cart automatically. Barcodes are also manually searchable — type a barcode number into the search field to find the product.
+
+## Explore the features
+
+<CardGroup cols={2}>
+  <Card title="Sales" icon="cart-shopping" href="/features/sales">
+    Process cash and credit sales, manage the cart, and scan barcodes.
+  </Card>
+  <Card title="Inventory" icon="box" href="/features/inventory">
+    Add, edit, and organize your product catalog.
+  </Card>
+  <Card title="Clients" icon="users" href="/features/clients">
+    Track customers and manage outstanding credit balances.
+  </Card>
+  <Card title="Statistics" icon="chart-bar" href="/features/statistics">
+    Review sales reports filtered by week, month, or all time.
+  </Card>
+</CardGroup>

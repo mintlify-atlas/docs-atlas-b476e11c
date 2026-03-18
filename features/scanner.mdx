@@ -1,0 +1,66 @@
+---
+title: "Barcode scanner"
+description: "Scan product barcodes and QR codes with your device camera."
+keywords: ["scanner", "barcode", "QR code", "camera", "EAN-13", "escanear", "html5-qrcode"]
+---
+
+POS Ventas uses the [Html5-QRCode](https://github.com/mebjas/html5-qrcode) library to scan barcodes and QR codes directly in the browser using your device's camera. No app installation is required.
+
+<Note>
+  The scanner works best on a mobile device with a rear camera.
+</Note>
+
+## Scanning a product during a sale
+
+<Steps>
+  <Step title="Tap Escanear">
+    In the Sales view, tap the **Escanear** (📷) button next to the search bar. Your browser will ask for camera permission if it hasn't already been granted — tap **Allow**.
+  </Step>
+  <Step title="Point at the barcode">
+    Hold the camera steady over the barcode or QR code. The scanner targets a 250 × 250 px area in the center of the viewfinder.
+  </Step>
+  <Step title="Wait for the result">
+    The scanner runs at 10 frames per second. Once a code is recognized, the camera closes automatically.
+
+    - **Product found** — the item is added to the cart immediately
+    - **Product not found** — a prompt asks whether you want to create a new product with the scanned code pre-filled
+  </Step>
+</Steps>
+
+## Adding a new product with a scanned code
+
+<Tip>
+  When adding products to your inventory, scan the barcode first from the Products view. The scanner pre-fills the **Código de Barras** field so you only need to enter the name and price.
+</Tip>
+
+## Supported formats
+
+Html5-QRCode supports a broad range of code types, including:
+
+- QR codes
+- EAN-13 and EAN-8
+- Code 128
+- UPC-A and UPC-E
+- Code 39, ITF, and more
+
+## Scanner configuration
+
+| Setting | Value |
+|---|---|
+| Frame rate | 10 fps |
+| Scan box | 250 × 250 px |
+| Camera | Back camera (`facingMode: "environment"`) |
+| Input mode | Camera only |
+
+## Error states
+
+| Error | Cause |
+|---|---|
+| Permission denied | Camera access was blocked in the browser |
+| No camera found | The device has no camera, or no camera was detected |
+| Browser not supported | The browser does not support the camera API |
+| Camera in use | Another app or tab is already using the camera |
+
+<Warning>
+  Camera access requires permission from the browser. Some browsers only allow camera access over HTTPS — if you're running POS Ventas from a local file, the scanner may not work in those browsers.
+</Warning>

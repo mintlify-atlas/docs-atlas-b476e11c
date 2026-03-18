@@ -1,0 +1,177 @@
+---
+title: 'App'
+description: 'The main application controller that coordinates all modules, manages views, modals, and global UI state.'
+---
+
+The `App` object is the central controller for POS Ventas. It initializes every module, manages view switching, controls modals, and provides shared utilities like toast notifications and theme management. It is instantiated once and available globally.
+
+## Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `currentView` | `string` | The name of the currently active view. One of `'sales'`, `'clients'`, `'products'`, or `'stats'`. Defaults to `'sales'`. |
+| `modals` | `object` | A map of modal name to DOM element, populated by `setupModals()`. Keys: `'scanner'`, `'product'`, `'client'`, `'clientDetail'`, `'selectClient'`, `'payment'`. |
+
+## Methods
+
+### `App.init()`
+
+Initializes the entire application. Calls `Storage.init()` followed by `Products.init()`, `Sales.init()`, `Clients.init()`, `Scanner.init()`, and `Stats.init()`. Then runs `setupNavigation()`, `setupModals()`, `setupThemeToggle()`, and switches to the default `'sales'` view.
+
+This method is called automatically on `DOMContentLoaded`.
+
+```javascript
+// Called automatically — you do not need to call this manually.
+App.init();
+```
+
+---
+
+### `App.switchView(viewName)`
+
+Switches the visible view. Removes the `active` class from all `.view` elements, then adds it to the element with id `view{ViewName}` (e.g., `viewSales`). Updates the `active` state on `.nav-item` elements and calls `refreshView(viewName)`.
+
+<ParamField path="viewName" type="string" required>
+  The view to activate. Accepted values: `'sales'`, `'clients'`, `'products'`, `'stats'`.
+</ParamField>
+
+```javascript
+App.switchView('products');
+```
+
+---
+
+### `App.refreshView(viewName)`
+
+Re-renders the data for the specified view. Called automatically by `switchView`. You can call it directly to force a refresh without navigating.
+
+| `viewName` | Effect |
+|---|---|
+| `'sales'` | Calls `Products.render()` |
+| `'clients'` | Calls `Clients.render()` |
+| `'products'` | Calls `Products.renderInventory()` |
+| `'stats'` | Calls `Stats.render()` |
+
+<ParamField path="viewName" type="string" required>
+  The view whose data should be refreshed.
+</ParamField>
+
+```javascript
+// Force a stats refresh without navigating.
+App.refreshView('stats');
+```
+
+---
+
+### `App.showModal(name)`
+
+Shows a modal by name. Adds the `active` CSS class to the modal element and sets `document.body.style.overflow = 'hidden'` to prevent background scrolling.
+
+<ParamField path="name" type="string" required>
+  The modal to show. One of `'scanner'`, `'product'`, `'client'`, `'clientDetail'`, `'selectClient'`, `'payment'`.
+</ParamField>
+
+```javascript
+App.showModal('payment');
+```
+
+---
+
+### `App.hideModal(name)`
+
+Hides a modal by name. Removes the `active` class and restores body scroll. If `name` is `'scanner'`, also calls `Scanner.cleanup()` to stop the camera.
+
+<ParamField path="name" type="string" required>
+  The modal to hide. One of `'scanner'`, `'product'`, `'client'`, `'clientDetail'`, `'selectClient'`, `'payment'`.
+</ParamField>
+
+```javascript
+App.hideModal('payment');
+```
+
+---
+
+### `App.showToast(message, type)`
+
+Displays a temporary notification toast for 3 seconds. The toast element (`#toast`) receives a CSS class matching the `type` value.
+
+<ParamField path="message" type="string" required>
+  The text to display in the toast.
+</ParamField>
+
+<ParamField path="type" type="string" default="'info'">
+  Visual style of the toast. One of `'info'`, `'success'`, `'error'`, `'warning'`.
+</ParamField>
+
+```javascript
+App.showToast('Producto guardado', 'success');
+App.showToast('Error al guardar', 'error');
+App.showToast('Carrito vacío', 'warning');
+```
+
+---
+
+### `App.setTheme(theme)`
+
+Applies a UI theme. Sets `data-theme` on the `<html>` element and persists the choice to `localStorage` under the key `'pos_theme'`. Also updates the theme toggle icon.
+
+<ParamField path="theme" type="string" required>
+  The theme to apply. Either `'light'` or `'dark'`.
+</ParamField>
+
+```javascript
+App.setTheme('dark');
+App.setTheme('light');
+```
+
+---
+
+### `App.setupNavigation()`
+
+Attaches `click` listeners to all `.nav-item` elements. Each listener reads `element.dataset.view` and calls `App.switchView(view)`. Called once during `App.init()`.
+
+```javascript
+// Called automatically by App.init().
+App.setupNavigation();
+```
+
+---
+
+### `App.setupModals()`
+
+Looks up modal DOM elements by id and stores them in `App.modals`. Binds close behavior to `.btn-close` buttons, `.btn-secondary[data-modal]` buttons, and backdrop clicks (clicking the modal overlay itself). Called once during `App.init()`.
+
+```javascript
+// Called automatically by App.init().
+App.setupModals();
+```
+
+---
+
+### `App.setupThemeToggle()`
+
+Reads the saved theme from `localStorage` (`'pos_theme'`) and applies it via `setTheme()`. Binds a `click` listener on `#btnThemeToggle` to toggle between `'light'` and `'dark'`. Called once during `App.init()`.
+
+```javascript
+// Called automatically by App.init().
+App.setupThemeToggle();
+```
+
+---
+
+### `App.capitalizeFirst(str)`
+
+Capitalizes the first character of a string. Used internally to construct view element ids (e.g., `'sales'` → `'Sales'` → `viewSales`).
+
+<ParamField path="str" type="string" required>
+  The string to capitalize.
+</ParamField>
+
+<ResponseField name="return" type="string">
+  The input string with its first character uppercased.
+</ResponseField>
+
+```javascript
+App.capitalizeFirst('sales'); // 'Sales'
+App.capitalizeFirst('products'); // 'Products'
+```

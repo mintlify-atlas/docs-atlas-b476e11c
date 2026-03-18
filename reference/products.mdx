@@ -1,0 +1,174 @@
+---
+title: 'Products'
+description: 'Manages product catalog display, inventory editing, and the sales view product grid.'
+---
+
+The `Products` module handles everything related to products: rendering the clickable product grid on the sales screen, managing the full inventory list with edit and delete actions, and the product create/update form. It reads from and writes to `Storage` and calls `Sales.addToCart()` when a product card is tapped.
+
+## Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `currentProducts` | `array` | In-memory cache of all products, loaded from `Storage`. Updated on every `loadProducts()` call. |
+| `searchTerm` | `string` | The current inventory search filter string. Updated by the `#searchInventory` input. Defaults to `''`. |
+
+## Methods
+
+### `Products.init()`
+
+Loads products from storage and binds all DOM event listeners. Called once by `App.init()`.
+
+```javascript
+Products.init();
+```
+
+---
+
+### `Products.loadProducts()`
+
+Fetches the products array from `Storage.getProducts()`, stores it in `currentProducts`, and calls `render()` to update the sales view grid.
+
+```javascript
+Products.loadProducts();
+```
+
+---
+
+### `Products.bindEvents()`
+
+Attaches event listeners to:
+- `#btnAddProduct` — opens the product form for creating a new product.
+- `#productForm` — handles form submission via `saveProduct()`.
+- `#searchInventory` — updates `searchTerm` and calls `renderInventory()` on each keystroke.
+- `#inventoryList` — delegates clicks on `.btn-edit` and `.btn-delete` buttons to `editProduct()` and `deleteProduct()`.
+
+```javascript
+Products.bindEvents();
+```
+
+---
+
+### `Products.render(searchTerm)`
+
+Renders the product grid (`#productsGrid`) used on the sales view. Filters `currentProducts` against `searchTerm`, matching on product name (`nombre`) or barcode (`codigo`). Each card gets a click listener that calls `Sales.addToCart(product)`.
+
+Shows a "No se encontraron productos" message if no products match the filter.
+
+<ParamField path="searchTerm" type="string" default="''">
+  Text to filter products by. Matched case-insensitively against `nombre` and `codigo`.
+</ParamField>
+
+```javascript
+// Render all products.
+Products.render();
+
+// Render products matching 'coca'.
+Products.render('coca');
+```
+
+---
+
+### `Products.renderInventory()`
+
+Renders the inventory list (`#inventoryList`) used on the products management view. Filters using the module-level `this.searchTerm`. Each row shows the product name, barcode, price, and edit/delete action buttons.
+
+```javascript
+Products.renderInventory();
+```
+
+---
+
+### `Products.showProductForm(product)`
+
+Opens the product modal. If `product` is provided, pre-fills the form fields for editing and sets the title to "Editar Producto". If no product is passed, resets the form and sets the title to "Agregar Producto".
+
+<ParamField path="product" type="object | null" default="null">
+  The product to edit. Pass `null` (or omit) to open the form in create mode.
+</ParamField>
+
+```javascript
+// Open in create mode.
+Products.showProductForm();
+
+// Open in edit mode.
+Products.showProductForm({
+  id: 'p1',
+  codigo: '7501234567890',
+  nombre: 'Coca Cola 1L',
+  precio: 5.50
+});
+```
+
+---
+
+### `Products.saveProduct()`
+
+Reads the current form values (`codigo`, `nombre`, `precio`), validates that all fields are present and `precio` is a non-negative number, then calls either `Storage.updateProduct()` (if an id is set) or `Storage.addProduct()`. Reloads the product list, re-renders the inventory, shows a toast, and closes the product modal.
+
+Shows an error toast and returns early if validation fails.
+
+```javascript
+// Triggered by form submit — you typically do not call this directly.
+Products.saveProduct();
+```
+
+---
+
+### `Products.editProduct(id)`
+
+Finds the product with the given `id` in `currentProducts` and calls `showProductForm(product)` to open the edit modal.
+
+<ParamField path="id" type="string" required>
+  The id of the product to edit.
+</ParamField>
+
+```javascript
+Products.editProduct('p1');
+```
+
+---
+
+### `Products.deleteProduct(id)`
+
+Prompts the user to confirm deletion. On confirmation, calls `Storage.deleteProduct(id)`, shows a success toast, and reloads the product list and inventory.
+
+<ParamField path="id" type="string" required>
+  The id of the product to delete.
+</ParamField>
+
+```javascript
+Products.deleteProduct('p1');
+```
+
+---
+
+### `Products.search(term)`
+
+Filters the sales view product grid by calling `render(term)`. Called by `Sales.bindEvents()` on the `#searchProducts` input (with a 300 ms debounce).
+
+<ParamField path="term" type="string" required>
+  The search string to pass to `render()`.
+</ParamField>
+
+```javascript
+Products.search('oreo');
+```
+
+---
+
+### `Products.escapeHtml(text)`
+
+Sanitizes a string to prevent XSS when injecting user-provided content into HTML. Creates a temporary `<div>` element, assigns the text as `textContent`, and returns `innerHTML`.
+
+<ParamField path="text" type="string" required>
+  The raw string to sanitize.
+</ParamField>
+
+<ResponseField name="return" type="string">
+  The HTML-escaped string safe for insertion into the DOM.
+</ResponseField>
+
+```javascript
+Products.escapeHtml('<script>alert(1)</script>');
+// Returns: '&lt;script&gt;alert(1)&lt;/script&gt;'
+```

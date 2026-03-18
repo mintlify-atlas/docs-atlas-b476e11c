@@ -1,0 +1,75 @@
+---
+title: "Inventory management"
+description: "Add, edit, and delete products in your inventory."
+keywords: ["inventory", "products", "barcode", "precio", "nuevo producto", "stock"]
+---
+
+The Products view (tap **Productos** in the bottom navigation) lists every product in your inventory. From here you can add new products, update prices, and remove items you no longer carry.
+
+## Adding a product
+
+<Steps>
+  <Step title="Open the product form">
+    Tap **Nuevo Producto** in the top-right corner of the Inventory view.
+  </Step>
+  <Step title="Fill in the details">
+    Enter the **Código de Barras**, **Nombre del Producto**, and **Precio**. All three fields are required.
+
+    <Tip>
+      Scan the product's barcode first from the Products view instead of typing the code manually — the scanner pre-fills the **Código de Barras** field for you. See [Barcode scanner](/features/scanner).
+    </Tip>
+  </Step>
+  <Step title="Save">
+    Tap **Guardar**. The product appears in the inventory list immediately.
+  </Step>
+</Steps>
+
+## Editing a product
+
+<Steps>
+  <Step title="Find the product">
+    Scroll or use the search bar to locate the product you want to change.
+  </Step>
+  <Step title="Open the edit form">
+    Tap the pencil (✏️) icon on the product row. The same form as "Add product" opens, pre-filled with the current values.
+  </Step>
+  <Step title="Update and save">
+    Change any fields, then tap **Guardar**.
+  </Step>
+</Steps>
+
+## Deleting a product
+
+Tap the trash (🗑️) icon on the product row. A confirmation dialog asks you to confirm before the product is permanently removed.
+
+<Warning>
+  Deleting a product does not remove it from historical sales records. Past sales that included this product remain intact.
+</Warning>
+
+## Searching inventory
+
+Type in the search bar at the top of the Inventory view to filter the list in real time. Matches are found by product name or barcode code.
+
+## Product data structure
+
+Each product is stored in localStorage with the following shape:
+
+```json
+{
+  "id": "auto",
+  "codigo": "7501234567890",
+  "nombre": "Coca Cola 1L",
+  "precio": 5.50
+}
+```
+
+| Field | Description |
+|---|---|
+| `id` | Auto-generated unique identifier |
+| `codigo` | Barcode or internal code used for scanning and search |
+| `nombre` | Display name shown in the product grid and cart |
+| `precio` | Unit price |
+
+<Note>
+  On first launch, POS Ventas loads a set of sample products so the app isn't empty. Delete or edit them to match your actual inventory before you start selling.
+</Note>

@@ -1,97 +1,71 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "POS Ventas"
+description: "A lightweight, browser-based point-of-sale system for small shops. Manage products, process sales, track client debts, and analyze your business — all offline, with no backend required."
 ---
 
-## Setting up
-
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Open the app in your browser and process your first sale in minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Sales" icon="cart-shopping" href="/features/sales">
+    Learn how to process cash and credit sales using the POS interface.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Inventory" icon="boxes-stacked" href="/features/inventory">
+    Add, edit, and manage your product catalog.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Clients" icon="users" href="/features/clients">
+    Track client debts, payment history, and credit sales.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What is POS Ventas?
 
-Everything you need to create world-class documentation.
+POS Ventas is a single-page point-of-sale application designed for small shops. It runs entirely in the browser with no server, no database, and no account required. All data is stored locally in your browser using `localStorage`.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Key features
 
-## Need inspiration?
+<CardGroup cols={2}>
+  <Card title="Sales interface" icon="cash-register">
+    Product grid with instant search, shopping cart, and one-tap checkout for both cash and credit (fiado) payments.
+  </Card>
+  <Card title="Barcode scanning" icon="barcode">
+    Scan product barcodes or QR codes with your device camera to add items to the cart instantly.
+  </Card>
+  <Card title="Client & debt tracking" icon="file-invoice-dollar">
+    Keep a record of customers who buy on credit. Log payments and view outstanding balances per client.
+  </Card>
+  <Card title="Sales statistics" icon="chart-bar">
+    View total revenue, cash vs. credit breakdown, and top-selling products filtered by week, month, or all time.
+  </Card>
+  <Card title="Inventory management" icon="clipboard-list">
+    Full CRUD management for your product catalog with barcode codes and prices.
+  </Card>
+  <Card title="Offline-first" icon="wifi-slash">
+    Works completely offline. No internet connection needed after the initial page load.
+  </Card>
+  <Card title="Data backup" icon="floppy-disk">
+    Export all your data as JSON and import it back at any time for backup or migration.
+  </Card>
+  <Card title="Light & dark theme" icon="moon">
+    Switch between light and dark mode with a single tap. Your preference is saved automatically.
+  </Card>
+</CardGroup>
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
+## How it works
+
+POS Ventas is a vanilla JavaScript application with no framework dependencies. It consists of six modules that coordinate through the main `App` controller:
+
+| Module | Responsibility |
+|--------|---------------|
+| `Storage` | Data persistence via `localStorage` — products, clients, sales |
+| `Products` | Product CRUD and rendering for both sales grid and inventory list |
+| `Sales` | Shopping cart, cash payments, and credit (fiado) sale flow |
+| `Clients` | Client CRUD, debt tracking, and payment recording |
+| `Scanner` | Camera-based barcode/QR scanning via Html5-QRCode |
+| `Stats` | Sales aggregation, revenue totals, and top products report |
+
+## Get started
+
+<Card title="Open the quickstart guide" icon="arrow-right" href="/quickstart">
+  Follow the step-by-step guide to open the app, add your first product, and process your first sale.
 </Card>

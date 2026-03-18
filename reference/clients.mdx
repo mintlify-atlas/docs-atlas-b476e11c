@@ -1,0 +1,192 @@
+---
+title: 'Clients'
+description: 'Manages the client list, debt tracking, payment recording, and the client selector used for credit sales.'
+---
+
+The `Clients` module handles all client-facing functionality: browsing and searching clients, adding and editing client records, viewing debt history, recording partial or full payments, and selecting a client from a modal when completing a credit sale.
+
+## Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `currentClients` | `array` | In-memory cache of all clients, loaded from `Storage`. Updated on every `loadClients()` call. |
+| `searchTerm` | `string` | The current client list search filter. Updated by the `#searchClients` input. Defaults to `''`. |
+| `onClientSelect` | `function \| null` | Callback invoked when a client is chosen in the selector modal. Set by `showClientSelector()`. |
+
+## Methods
+
+### `Clients.init()`
+
+Loads clients from storage and binds all DOM event listeners. Called once by `App.init()`.
+
+```javascript
+Clients.init();
+```
+
+---
+
+### `Clients.loadClients()`
+
+Fetches the clients array from `Storage.getClients()`, stores it in `currentClients`, and calls `render()`.
+
+```javascript
+Clients.loadClients();
+```
+
+---
+
+### `Clients.bindEvents()`
+
+Attaches event listeners to:
+- `#btnAddClient` — opens the client form in create mode.
+- `#clientForm` — handles form submission via `saveClient()`.
+- `#paymentForm` — handles payment form submission via `recordPayment()`.
+- `#searchClients` — updates `searchTerm` and calls `render()`.
+- `#searchClientSelect` — calls `renderClientSelector()` to filter the selector modal.
+- `#clientsList` — delegates clicks on `.client-card` elements to `showClientDetail()`.
+- `#clientNotesList` — delegates clicks on `.btn-pay` buttons to `showPaymentForm()`.
+
+```javascript
+Clients.bindEvents();
+```
+
+---
+
+### `Clients.render()`
+
+Renders client cards in `#clientsList`, filtered by `searchTerm`. Each card displays the client name, optional phone number, and current debt. Cards with a non-zero `saldoDeuda` receive the `has-debt` CSS class.
+
+Shows a "No se encontraron clientes" message when no clients match the filter.
+
+```javascript
+Clients.render();
+```
+
+---
+
+### `Clients.showClientForm(client)`
+
+Opens the client modal. If `client` is provided, pre-fills the form with the client's name and phone for editing and sets the title to "Editar Cliente". Otherwise resets the form for creating a new client.
+
+<ParamField path="client" type="object | null" default="null">
+  The client to edit. Pass `null` (or omit) to open in create mode.
+</ParamField>
+
+```javascript
+// Open in create mode.
+Clients.showClientForm();
+
+// Open in edit mode.
+Clients.showClientForm({ id: 'c1', nombre: 'Ana García', telefono: '987654321' });
+```
+
+---
+
+### `Clients.saveClient()`
+
+Reads `nombre` and `telefono` from the client form. Validates that `nombre` is not empty, then calls either `Storage.updateClient()` or `Storage.addClient()`. Reloads the client list, shows a toast, and closes the client modal.
+
+Shows an error toast and returns early if the name field is blank.
+
+```javascript
+// Triggered by form submit — you typically do not call this directly.
+Clients.saveClient();
+```
+
+---
+
+### `Clients.showClientDetail(clientId)`
+
+Opens the `clientDetail` modal for the given client. Displays the client's name and total outstanding debt, then renders their debt notes sorted newest-first. Each note shows the date, product summary (e.g., "2x Coca Cola 1L"), total, and remaining balance. Unpaid notes include an "Abonar" button that triggers `showPaymentForm()`.
+
+<ParamField path="clientId" type="string" required>
+  The id of the client to display.
+</ParamField>
+
+```javascript
+Clients.showClientDetail('c1');
+```
+
+---
+
+### `Clients.showPaymentForm(clientId, noteId, pending)`
+
+Opens the payment modal pre-filled with the outstanding amount. Sets the `max` attribute on the amount input to prevent over-payment.
+
+<ParamField path="clientId" type="string" required>
+  The id of the client making the payment.
+</ParamField>
+
+<ParamField path="noteId" type="string" required>
+  The id of the debt note being paid.
+</ParamField>
+
+<ParamField path="pending" type="number" required>
+  The outstanding amount to pre-fill in the payment input.
+</ParamField>
+
+```javascript
+Clients.showPaymentForm('c1', 'note-id-here', 15.50);
+```
+
+---
+
+### `Clients.recordPayment()`
+
+Reads the payment amount from the form. Validates that the amount is positive and does not exceed the pending balance, then calls `Storage.recordPayment()`. Shows a success toast, closes the payment modal, reloads the client list, and reopens the client detail modal after a 100 ms delay.
+
+```javascript
+// Triggered by payment form submit — you typically do not call this directly.
+Clients.recordPayment();
+```
+
+---
+
+### `Clients.showClientSelector(callback)`
+
+Stores `callback` as `onClientSelect`, renders the full unfiltered client list in the selector, and opens the `selectClient` modal. When a client is chosen, `callback` is called with the client's `id`.
+
+Used by `Sales.selectClientForCredit()` to let the cashier assign a credit sale to a client.
+
+<ParamField path="callback" type="function" required>
+  Function called with `(clientId: string)` when the user selects a client.
+</ParamField>
+
+```javascript
+Clients.showClientSelector((clientId) => {
+  Sales.completeSale('fiado', clientId);
+  App.hideModal('selectClient');
+});
+```
+
+---
+
+### `Clients.renderClientSelector(searchTerm)`
+
+Renders a filterable client list in `#selectClientList`. Each item is clickable and invokes `onClientSelect` with the chosen client's id. If no clients match, shows an "Agregar Nuevo Cliente" button that opens the client form.
+
+<ParamField path="searchTerm" type="string" default="''">
+  Text to filter clients by name. Matched case-insensitively.
+</ParamField>
+
+```javascript
+Clients.renderClientSelector('ana');
+```
+
+---
+
+### `Clients.escapeHtml(text)`
+
+Sanitizes a string to prevent XSS when injecting user-provided content into HTML. Creates a temporary `<div>` element, assigns the text as `textContent`, and returns `innerHTML`.
+
+<ParamField path="text" type="string" required>
+  The raw string to sanitize.
+</ParamField>
+
+<ResponseField name="return" type="string">
+  The HTML-escaped string safe for insertion into the DOM.
+</ResponseField>
+
+```javascript
+Clients.escapeHtml('<script>xss</script>'); // '&lt;script&gt;xss&lt;/script&gt;'
+```

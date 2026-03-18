@@ -1,0 +1,162 @@
+---
+title: 'Sales'
+description: 'Manages the shopping cart, quantity controls, and completing cash or credit sales.'
+---
+
+The `Sales` module controls the active shopping cart on the sales screen. It handles adding products, adjusting quantities, calculating totals, and finalizing transactions — either as cash payments (`efectivo`) or credit sales (`fiado`) assigned to a client.
+
+## Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `cart` | `array` | The current in-memory cart. Each item has `id`, `nombre`, `precio`, and `cantidad`. Starts empty on every page load. |
+
+## Methods
+
+### `Sales.init()`
+
+Binds all cart-related event listeners and renders the initial empty cart. Called once by `App.init()`.
+
+```javascript
+Sales.init();
+```
+
+---
+
+### `Sales.bindEvents()`
+
+Attaches event listeners to:
+- `#searchProducts` — calls `Products.search()` with a 300 ms debounce.
+- `#btnClearCart` — calls `clearCart()`.
+- `#btnPayCash` — calls `completeSale('efectivo')`.
+- `#btnPayCredit` — calls `selectClientForCredit()`.
+- `#cartItems` — delegates clicks on `.qty-btn` elements to `updateQuantity()`.
+
+```javascript
+Sales.bindEvents();
+```
+
+---
+
+### `Sales.addToCart(product)`
+
+Adds a product to the cart. If the product is already present (matched by `id`), increments `cantidad` by 1. Otherwise pushes a new cart item with `cantidad: 1`. Calls `render()` and shows a success toast.
+
+<ParamField path="product" type="object" required>
+  A product object from `Storage`. Must have `id`, `nombre`, and `precio`.
+</ParamField>
+
+```javascript
+const product = Storage.findProductByCode('7501234567890');
+if (product) {
+  Sales.addToCart(product);
+}
+```
+
+---
+
+### `Sales.updateQuantity(productId, action)`
+
+Adjusts the quantity of a cart item. `'increase'` adds 1; `'decrease'` subtracts 1. If `cantidad` reaches 0 after a decrease, the item is removed from the cart entirely. Calls `render()` after the update.
+
+<ParamField path="productId" type="string" required>
+  The `id` of the product in the cart.
+</ParamField>
+
+<ParamField path="action" type="string" required>
+  The quantity operation. Either `'increase'` or `'decrease'`.
+</ParamField>
+
+```javascript
+Sales.updateQuantity('p1', 'increase');
+Sales.updateQuantity('p1', 'decrease');
+```
+
+---
+
+### `Sales.getTotal()`
+
+Calculates the cart total by summing `precio * cantidad` for every item.
+
+<ResponseField name="return" type="number">
+  The total price of all items currently in the cart.
+</ResponseField>
+
+```javascript
+const total = Sales.getTotal();
+console.log(`Total: S/.${total.toFixed(2)}`);
+```
+
+---
+
+### `Sales.render()`
+
+Re-renders the cart UI. Writes item rows to `#cartItems` and the total to `#cartTotal`. Shows a "Carrito vacío" message when the cart is empty.
+
+```javascript
+Sales.render();
+```
+
+---
+
+### `Sales.clearCart()`
+
+Prompts the user to confirm, then empties the `cart` array and calls `render()`. Shows a success toast. Does nothing if the cart is already empty.
+
+```javascript
+Sales.clearCart();
+```
+
+---
+
+### `Sales.completeSale(tipo, clientId)`
+
+Finalizes and records a sale. Builds a sale object from the current cart and calls `Storage.addSale()`. For credit sales (`tipo === 'fiado'`), also calls `Storage.addDebtNote()` to add the debt to the client's record. Clears the cart, shows a toast, and if the sale was on credit, reloads the clients list via `Clients.loadClients()`.
+
+Shows a warning toast and returns early if the cart is empty.
+
+<ParamField path="tipo" type="string" required>
+  Payment type. Either `'efectivo'` (cash) or `'fiado'` (credit).
+</ParamField>
+
+<ParamField path="clientId" type="string | null" default="null">
+  The id of the client to assign the debt to. Required when `tipo` is `'fiado'`.
+</ParamField>
+
+```javascript
+// Cash sale.
+Sales.completeSale('efectivo');
+
+// Credit sale assigned to a client.
+Sales.completeSale('fiado', 'client-id-here');
+```
+
+---
+
+### `Sales.selectClientForCredit()`
+
+Validates that the cart is not empty, then opens the client selector modal by calling `Clients.showClientSelector()`. Passes a callback that calls `completeSale('fiado', clientId)` and hides the `selectClient` modal once a client is chosen.
+
+Shows a warning toast if the cart is empty.
+
+```javascript
+Sales.selectClientForCredit();
+```
+
+---
+
+### `Sales.escapeHtml(text)`
+
+Sanitizes a string to prevent XSS when injecting user-provided content into HTML. Creates a temporary `<div>` element, assigns the text as `textContent`, and returns `innerHTML`.
+
+<ParamField path="text" type="string" required>
+  The raw string to sanitize.
+</ParamField>
+
+<ResponseField name="return" type="string">
+  The HTML-escaped string safe for insertion into the DOM.
+</ResponseField>
+
+```javascript
+Sales.escapeHtml('<b>bold</b>'); // '&lt;b&gt;bold&lt;/b&gt;'
+```

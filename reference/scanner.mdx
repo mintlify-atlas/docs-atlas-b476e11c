@@ -1,0 +1,133 @@
+---
+title: 'Scanner'
+description: 'Provides barcode and QR code scanning via the device camera using the Html5-QRCode library.'
+---
+
+The `Scanner` module wraps the [Html5-QRCode](https://github.com/mebjas/html5-qrcode) library (v2.3.8, loaded from the unpkg CDN) to provide camera-based barcode scanning. When a code is decoded, it looks up the matching product in `Storage` and adds it to the cart — or offers to create a new product if no match is found.
+
+<Info>
+  The `Html5Qrcode` global must be loaded from the CDN before this module runs. If the library is unavailable, `startScanning()` shows an error toast and returns early.
+</Info>
+
+## Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `html5QrCode` | `Html5Qrcode \| null` | The active `Html5Qrcode` instance. `null` when not scanning. |
+| `isScanning` | `boolean` | `true` while the camera is active. |
+
+## Methods
+
+### `Scanner.init()`
+
+Binds the scan button click event. Called once by `App.init()`.
+
+```javascript
+Scanner.init();
+```
+
+---
+
+### `Scanner.bindEvents()`
+
+Attaches a `click` listener on `#btnScan` that calls `startScanning()`.
+
+```javascript
+Scanner.bindEvents();
+```
+
+---
+
+### `Scanner.startScanning()`
+
+Asynchronously starts the camera and begins scanning. Checks that `Html5Qrcode` is loaded, opens the scanner modal, creates a new `Html5Qrcode` instance targeting `#scannerReader`, and starts the camera using the back-facing lens.
+
+Camera configuration:
+
+| Option | Value |
+|---|---|
+| `fps` | `10` |
+| `qrbox` | `{ width: 250, height: 250 }` |
+| `aspectRatio` | `1.0` |
+| `facingMode` | `'environment'` (back camera) |
+
+On success, sets `isScanning = true`. On failure, shows a localized error toast, closes the scanner modal, and does not set `isScanning`.
+
+| Error name | Toast message |
+|---|---|
+| `NotAllowedError` | Camera permission denied |
+| `NotFoundError` | No camera found |
+| `NotSupportedError` | Browser not compatible |
+| `NotReadableError` | Camera in use by another app |
+
+```javascript
+await Scanner.startScanning();
+```
+
+---
+
+### `Scanner.onScanSuccess(decodedText, decodedResult)`
+
+Called by `Html5Qrcode` when a barcode or QR code is successfully decoded. Stops scanning, then calls `Storage.findProductByCode(decodedText)`.
+
+- If a matching product is found: calls `Sales.addToCart(product)` and shows a success toast.
+- If no product is found: shows a warning toast with the scanned code. Prompts the user via `confirm()` to create a new product; if confirmed, calls `createProductFromScan(decodedText)`.
+
+Finally hides the scanner modal.
+
+<ParamField path="decodedText" type="string" required>
+  The raw decoded barcode or QR code string.
+</ParamField>
+
+<ParamField path="decodedResult" type="object" required>
+  The full result object from `Html5Qrcode` (not used directly, passed through from the library callback).
+</ParamField>
+
+```javascript
+// Called automatically by Html5Qrcode — you do not call this manually.
+Scanner.onScanSuccess('7501234567890', result);
+```
+
+---
+
+### `Scanner.stopScanning()`
+
+Asynchronously stops the active camera. Calls `html5QrCode.stop()` followed by `html5QrCode.clear()`, then sets `isScanning = false`. Does nothing if not currently scanning.
+
+```javascript
+await Scanner.stopScanning();
+```
+
+---
+
+### `Scanner.createProductFromScan(code)`
+
+Pre-fills the product creation form with the scanned barcode as the `codigo` field, sets the modal title to "Nuevo Producto Escaneado", opens the product modal, and focuses the product name input after a 300 ms delay.
+
+<ParamField path="code" type="string" required>
+  The scanned barcode string to pre-fill in the product form.
+</ParamField>
+
+```javascript
+Scanner.createProductFromScan('9876543210');
+```
+
+---
+
+### `Scanner.cleanup()`
+
+Called by `App.hideModal('scanner')` whenever the scanner modal is closed. Calls `stopScanning()` to release the camera.
+
+```javascript
+Scanner.cleanup();
+```
+
+## External dependency
+
+This module depends on the `Html5Qrcode` global provided by Html5-QRCode v2.3.8:
+
+```html
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+```
+
+The library must be loaded before `scanner.js` executes.

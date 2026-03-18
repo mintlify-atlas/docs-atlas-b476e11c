@@ -1,0 +1,63 @@
+---
+title: "Theme"
+description: "Switch between light and dark mode, and understand how the theme preference is saved."
+---
+
+POS Ventas ships with a light theme by default and a dark theme you can switch to at any time. Your choice is saved automatically so it persists between sessions.
+
+## Toggling the theme
+
+Tap the **○/●** button in the top-right corner of the header to switch between light and dark mode.
+
+- **○** — light theme is active
+- **●** — dark theme is active
+
+The toggle button itself updates instantly so you always know which mode you are in.
+
+## How the theme is applied
+
+The theme is controlled by a `data-theme` attribute on the root `<html>` element. Light mode uses the default CSS custom properties defined in `:root`. Dark mode overrides them under the `[data-theme="dark"]` selector:
+
+```css
+[data-theme="dark"] {
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-border: #334155;
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  /* ... */
+}
+```
+
+Every component in the app reads from these CSS variables, so the entire interface updates as soon as the attribute changes — no page reload needed.
+
+## How the preference is saved
+
+When you toggle the theme, the app calls `App.setTheme()`, which sets the `data-theme` attribute and writes the preference to `localStorage` under the key `pos_theme`:
+
+```javascript
+// Toggle theme on button click
+const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+App.setTheme(newTheme);
+
+// setTheme sets the data-theme attribute and saves to localStorage
+App.setTheme(theme); // 'light' or 'dark'
+```
+
+On the next page load, `setupThemeToggle()` reads `pos_theme` from `localStorage` and restores your saved preference before the page renders.
+
+## Setting the theme programmatically
+
+You can also set the theme from the browser console without clicking the button:
+
+```javascript
+App.setTheme('dark');  // switch to dark mode
+App.setTheme('light'); // switch to light mode
+```
+
+This is useful for testing or if you want to write a script that applies a theme based on the time of day.
+
+<Note>
+The theme setting is stored in `localStorage` key `pos_theme` as either `"light"` or `"dark"`. Clearing browser storage will reset the theme to light on the next launch.
+</Note>

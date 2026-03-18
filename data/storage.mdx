@@ -1,0 +1,96 @@
+---
+title: "Data storage"
+description: "How POS Ventas stores your data, what gets saved, and how to keep it safe."
+---
+
+POS Ventas stores all of your data in the browser's built-in `localStorage`. There is no server, no cloud account, and no internet connection required. Everything stays on your device, in your browser.
+
+## localStorage keys
+
+The app uses five keys to persist data between sessions:
+
+| Key | Contents |
+|-----|----------|
+| `pos_inventario` | Product catalog — array of product objects |
+| `pos_clientes` | Client list — array of client objects with debt notes |
+| `pos_ventas` | Sales history — array of sale objects |
+| `pos_version` | App version string (`"1.0.0"`) used for future data migrations |
+| `pos_theme` | Saved theme preference (`"light"` or `"dark"`) |
+
+## First run
+
+On the very first launch, if no products are found in `pos_inventario`, the app automatically loads 10 sample products so you have something to work with right away. You can edit or delete these samples and replace them with your real inventory.
+
+## Storage limits
+
+Browsers limit `localStorage` to roughly **5 MB per origin**. For a typical small shop — thousands of products, clients, and sales — this is more than enough. If you reach the limit, the app will log an error to the browser console when trying to write new data. Exporting and archiving old sales records can free up space if needed.
+
+## Data schema
+
+The three main data types have the following shapes:
+
+**Product**
+```json
+{
+  "id": "lc4k2m9rx",
+  "codigo": "7501234567890",
+  "nombre": "Coca Cola 1L",
+  "precio": 5.50
+}
+```
+
+**Client**
+```json
+{
+  "id": "lc4k2m9ry",
+  "nombre": "María García",
+  "telefono": "987654321",
+  "saldoDeuda": 12.50,
+  "notas": [
+    {
+      "id": "lc4k2m9rz",
+      "fecha": "2024-01-15T10:30:00.000Z",
+      "productos": [...],
+      "total": 12.50,
+      "pagado": 0,
+      "pendiente": 12.50
+    }
+  ]
+}
+```
+
+**Sale**
+```json
+{
+  "id": "lc4k2m9s0",
+  "fecha": "2024-01-15T10:30:00.000Z",
+  "productos": [
+    { "id": "p1", "nombre": "Coca Cola 1L", "precio": 5.50, "cantidad": 2 }
+  ],
+  "total": 11.00,
+  "tipo": "efectivo",
+  "clienteId": null
+}
+```
+
+### ID generation
+
+All records get a unique ID from the `generateId()` function:
+
+```javascript
+generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+```
+
+This produces compact, collision-resistant strings like `lc4k2m9rx` without requiring a server or UUID library.
+
+## Important limitations
+
+<Warning>
+**Data is browser-specific.** If you open the app in a different browser or on a different device, you will see empty data. `localStorage` is not shared between browsers or devices. Use [export/import](/data/backup-restore) to move data between devices.
+</Warning>
+
+<Warning>
+**Clearing browser data deletes everything.** Clearing your browser's cache, cookies, or site data will permanently erase all POS Ventas records — products, clients, and sales history. Export a backup regularly so you always have a copy you can restore.
+</Warning>
